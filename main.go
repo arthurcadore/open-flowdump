@@ -7,7 +7,11 @@ import (
     "net"
 )
 
-func processSFlowPacket(packet []byte) {
+func flow_counter(packet []byte) {
+
+} 
+
+func flow_collector(packet []byte) {
     // Verifica se o tamanho do pacote é suficiente para conter o cabeçalho mínimo
     if len(packet) < 208 {
         fmt.Println("Pacote muito pequeno para ser um pacote sFlow válido")
@@ -23,8 +27,39 @@ func processSFlowPacket(packet []byte) {
     sysUptime := binary.BigEndian.Uint32(packet[20:24])
     numSamples := binary.BigEndian.Uint32(packet[24:28])
 
+	// Imprimir todos os valores dos campos
+	fmt.Printf("-------------------------\n")
+	fmt.Printf("Versão do Datagram: %d\n", datagramVersion)
+	fmt.Printf("Versão do IP: %d\n", ipVersion)
+	fmt.Printf("Endereço IP do Agente: %s\n", agentIP)
+	fmt.Printf("ID do Sub-Agente: %d\n", subAgentID)
+	fmt.Printf("Número de Sequência: %d\n", sequenceNumber)
+	fmt.Printf("SysUptime (secs): %d\n", sysUptime/1000)
+	fmt.Printf("Número de Amostras: %d\n", numSamples)
+
+	// verificar o tipo de flow
+	sflow_type := binary.BigEndian.Uint32(packet[28:32])
+	fmt.Printf("Tipo de flow: %d\n", sflow_type)
+
+
+	// se o flow type for igual a 4, então é um flow interval
+	// se o flow type for igual a 3, então é um counter sample
+	
+	switch sflow_type {
+		case 3:
+			flow_counter(packet)
+		case 4:
+			flow_interval(packet)
+		default:
+			fmt.Println("Tipo de flow desconhecido")
+	}
+
+
+}
+
+func flow_interval(packet []byte) {
+
     // Expanded counters sample
-    sflow_type := binary.BigEndian.Uint32(packet[28:32])
     sample_length := binary.BigEndian.Uint32(packet[32:36])
     sequence_number := binary.BigEndian.Uint32(packet[36:40])
     source_id_type := binary.BigEndian.Uint32(packet[40:44])
@@ -78,19 +113,8 @@ func processSFlowPacket(packet []byte) {
 
     // Verificar se os contadores de entrada e saída são diferentes de zero
     if if_in_octets != 0 || if_out_octets != 0 {
-        // Imprimir todos os valores dos campos
-        fmt.Printf("-------------------------\n")
-        fmt.Printf("Versão do Datagram: %d\n", datagramVersion)
-        fmt.Printf("Versão do IP: %d\n", ipVersion)
-        fmt.Printf("Endereço IP do Agente: %s\n", agentIP)
-        fmt.Printf("ID do Sub-Agente: %d\n", subAgentID)
-        fmt.Printf("Número de Sequência: %d\n", sequenceNumber)
-        fmt.Printf("SysUptime (secs): %d\n", sysUptime/1000)
-        fmt.Printf("Número de Amostras: %d\n", numSamples)
 
 		// imprimir os valores genéricos: 
-
-		fmt.Printf("Tipo de flow: %d\n", sflow_type)
 		fmt.Printf("Comprimento da captura: %d\n", sample_length)
 		fmt.Printf("Sequence Number: %d\n", sequence_number)
 		fmt.Printf("Source ID Type: %d\n", source_id_type)
@@ -169,6 +193,6 @@ func main() {
         }
 
         // Função para processar o pacote sFlow e imprimir os contadores
-        processSFlowPacket(buf[:n])
+        flow_collector(buf[:n])
     }
 }
