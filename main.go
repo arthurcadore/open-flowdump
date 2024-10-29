@@ -1,63 +1,43 @@
 package main
 
 import (
-    "encoding/binary"
     "fmt"
     "log"
     "net"
     "flag"
 )
 
-func flow_collector(packet []byte) {
+
+func flow_collector(packet []byte, maxHeader int) {
     // Verifica se o tamanho do pacote é suficiente para conter o cabeçalho mínimo
     if len(packet) < 208 {
         fmt.Println("Pacote muito pequeno para ser um pacote sFlow válido")
         return
     }
-
+    
     // Extrair os campos do cabeçalho de acordo com a estrutura fornecida
-    datagramVersion := binary.BigEndian.Uint32(packet[0:4])
-    ipVersion := binary.BigEndian.Uint32(packet[4:8])
-    agentIP := net.IP(packet[8:12])
-    subAgentID := binary.BigEndian.Uint32(packet[12:16])
-    sequenceNumber := binary.BigEndian.Uint32(packet[16:20])
-    sysUptime := binary.BigEndian.Uint32(packet[20:24])
-    numSamples := binary.BigEndian.Uint32(packet[24:28])
+    genericHeader(&packet)
 
-	// Imprimir todos os valores dos campos
-	fmt.Printf("-------------------------\n")
-	fmt.Printf("Versão do Datagram: %d\n", datagramVersion)
-	fmt.Printf("Versão do IP: %d\n", ipVersion)
-	fmt.Printf("Endereço IP do Agente: %s\n", agentIP)
-	fmt.Printf("ID do Sub-Agente: %d\n", subAgentID)
-	fmt.Printf("Número de Sequência: %d\n", sequenceNumber)
-	fmt.Printf("SysUptime (secs): %d\n", sysUptime/1000)
-	fmt.Printf("Número de Amostras: %d\n", numSamples)
+    // Verificar o tipo de flow
+    sflow_type := checkFlowType(&packet)
 
-	// verificar o tipo de flow
-	sflow_type := binary.BigEndian.Uint32(packet[28:32])
-	fmt.Printf("Tipo de flow: %d\n", sflow_type)
-
-
-	// se o flow type for igual a 4, então é um flow interval
-	// se o flow type for igual a 3, então é um counter sample
-	
 	switch sflow_type {
-		case 3:
-			flowSample(packet)
-		case 4:
-			flowInterval(packet)
+        // se o flow type for igual a 3, então é um flow sample
+        case 3:
+            flowSample(&packet, maxHeader)
+	    // se o flow type for igual a 4, então é um flow interval
+        case 4:
+			flowInterval(&packet)
 		default:
 			fmt.Println("Tipo de flow desconhecido")
 	}
-
-
 }
 
 func main() {
 
     ip := flag.String("ip", "0.0.0.0", "Endereço IP para escutar")
     port := flag.Int("port", 6343, "Porta para escutar")
+    maxHeader := flag.Int("maxHeader", 512, "Tamanho máximo do cabeçalho coletado por Amostragem")
 
     // Parse as flags
     flag.Parse()
@@ -75,6 +55,7 @@ func main() {
     defer conn.Close()
 
     fmt.Printf("Servidor sFlow ouvindo no endereço %s:%d\n", *ip, *port)
+    fmt.Printf("Configurado o max-header de: %d\n", *maxHeader)
 
     buf := make([]byte, 2048) // Buffer para armazenar pacotes recebidos
     for {
@@ -85,6 +66,6 @@ func main() {
         }
 
         // Função para processar o pacote sFlow e imprimir os contadores
-        flow_collector(buf[:n])
+        flow_collector(buf[:n], *maxHeader)
     }
 }
