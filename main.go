@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "net"
+    "flag"
 )
 
 func flow_collector(packet []byte) {
@@ -54,10 +55,18 @@ func flow_collector(packet []byte) {
 }
 
 func main() {
+
+    ip := flag.String("ip", "0.0.0.0", "Endereço IP para escutar")
+    port := flag.Int("port", 6343, "Porta para escutar")
+
+    // Parse as flags
+    flag.Parse()
+    
     addr := net.UDPAddr{
-        Port: 6343, // Porta padrão para sFlow
-        IP:   net.ParseIP("0.0.0.0"),
+        Port: *port, // Usa a porta passada como argumento
+        IP:   net.ParseIP(*ip), // Usa o IP passado como argumento
     }
+
 
     conn, err := net.ListenUDP("udp", &addr)
     if err != nil {
@@ -65,7 +74,7 @@ func main() {
     }
     defer conn.Close()
 
-    fmt.Println("Servidor sFlow ouvindo na porta 6343...")
+    fmt.Printf("Servidor sFlow ouvindo no endereço %s:%d\n", *ip, *port)
 
     buf := make([]byte, 2048) // Buffer para armazenar pacotes recebidos
     for {

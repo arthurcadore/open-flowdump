@@ -4,7 +4,7 @@
 
 ```bash
 
-go build -o .out/sflowdump
+go build -o ./out/sflowdump
 
 ```
 
