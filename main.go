@@ -7,10 +7,12 @@ import (
     "flag"
 )
 
+const enableLogging = false // Alterar para true para ativar os prints
+
 
 func flow_collector(packet []byte, maxHeader int) {
     // Verifica se o tamanho do pacote é suficiente para conter o cabeçalho mínimo
-    if len(packet) < 208 {
+    if len(packet) < 192 {
         fmt.Println("Pacote muito pequeno para ser um pacote sFlow válido")
         return
     }
@@ -27,7 +29,7 @@ func flow_collector(packet []byte, maxHeader int) {
             flowSample(&packet, maxHeader)
 	    // se o flow type for igual a 4, então é um flow interval
         case 4:
-			flowInterval(&packet)
+			//flowInterval(&packet)
 		default:
 			fmt.Println("Tipo de flow desconhecido")
 	}
