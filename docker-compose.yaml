@@ -1,0 +1,15 @@
+services:
+  database:
+    image: mysql
+    environment:
+      MYSQL_DATABASE: sflowdb
+     # MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret-db
+    restart: always
+    secrets:
+      - secret-db
+    volumes:
+      - ./database/secret-setup.sql:/docker-entrypoint-initdb.d/setup.sql
+      
+secrets:
+  secret-db:
+    file: ./database/secret-db

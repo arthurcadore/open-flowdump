@@ -7,7 +7,7 @@ import (
     "flag"
 )
 
-const enableLogging = false // Alterar para true para ativar os prints
+const enableLogging = true // Alterar para true para ativar os prints
 
 
 func flow_collector(packet []byte, maxHeader int, srcIP net.IP) {
