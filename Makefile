@@ -4,7 +4,8 @@ stop:
 	docker compose down
 
 start:
-	docker compose up -d
+	docker compose build --no-cache
+	docker compose up & 
 
 clean:
 	docker ps -a -q | xargs docker rm
