@@ -75,7 +75,9 @@ func genericHeader(packet *[]byte) {
 func checkFlowType(packet *[]byte) int{
     // Verificar o tipo de flow
     flowType := popUint32(packet)
+    if enableLogging {
     fmt.Printf("Tipo de flow: %d\n", flowType)
+    } 
 
     return int(flowType)
 }

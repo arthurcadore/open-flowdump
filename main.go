@@ -10,12 +10,14 @@ import (
 const enableLogging = false // Alterar para true para ativar os prints
 
 
-func flow_collector(packet []byte, maxHeader int) {
+func flow_collector(packet []byte, maxHeader int, srcIP net.IP) {
     // Verifica se o tamanho do pacote é suficiente para conter o cabeçalho mínimo
     if len(packet) < 192 {
         fmt.Println("Pacote muito pequeno para ser um pacote sFlow válido")
         return
     }
+
+
     
     // Extrair os campos do cabeçalho de acordo com a estrutura fornecida
     genericHeader(&packet)
@@ -61,13 +63,18 @@ func main() {
 
     buf := make([]byte, 2048) // Buffer para armazenar pacotes recebidos
     for {
-        n, _, err := conn.ReadFromUDP(buf)
+        n, srcAddr, err := conn.ReadFromUDP(buf)
         if err != nil {
             log.Printf("Erro ao ler o pacote UDP: %v", err)
             continue
         }
 
+        if enableLogging { 
+        // Imprime o IP de origem do pacote recebido
+        fmt.Printf("Pacote recebido de %s\n", srcAddr.IP.String())
+        }
+
         // Função para processar o pacote sFlow e imprimir os contadores
-        flow_collector(buf[:n], *maxHeader)
+        flow_collector(buf[:n], *maxHeader, srcAddr.IP)
     }
 }
