@@ -51,6 +51,7 @@ func main() {
         IP:   net.ParseIP(*ip), // Usa o IP passado como argumento
     }
 
+    connect()
 
     conn, err := net.ListenUDP("udp", &addr)
     if err != nil {
